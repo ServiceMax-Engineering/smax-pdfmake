@@ -1,5 +1,5 @@
 'use strict';
-
+const bidiFactory = require("bidi-js");
 var TraversalTracker = require('./traversalTracker');
 var DocPreprocessor = require('./docPreprocessor');
 var DocMeasure = require('./docMeasure');
@@ -42,6 +42,11 @@ function LayoutBuilder(pageSize, pageMargins, imageMeasure, svgMeasure) {
 	this.imageMeasure = imageMeasure;
 	this.svgMeasure = svgMeasure;
 	this.tableLayouts = {};
+	if (typeof bidiFactory === "object") {
+		this.bidi = bidiFactory.default();
+	} else {
+		this.bidi = bidiFactory();
+	}
 }
 
 LayoutBuilder.prototype.registerTableLayouts = function (tableLayouts) {
@@ -723,8 +728,97 @@ LayoutBuilder.prototype.processToc = function (node) {
 	}
 };
 
-LayoutBuilder.prototype.buildNextLine = function (textNode) {
+function copyInlineStyles(inline) {
+	let styles = {};
+	const {
+		x,
+		width,
+		height,
+		font,
+		trailingCut,
+		fontName,
+		leadingCut,
+		text,
+		...rest
+	} = inline;
+	styles = rest;
+	styles.font = fontName;
+	return styles;
+}
 
+LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
+	const defaultDirection = textNode._dir;
+	const embeddingLevels = this.bidi.getEmbeddingLevels(text, defaultDirection);
+	const flips = this.bidi.getReorderSegments(text, embeddingLevels);
+	if (flips.length === 0) {
+		return ltrLine;
+	}
+	const flipped = text.split("");
+	const inlinesRef = new Array(flipped.length).fill(-1);
+	const inlineStyles = new Array(ltrLine.inlines.length).fill(null);
+	let k = 0;
+	for (let i = 0; i < ltrLine.inlines.length; i += 1) {
+		const inline = ltrLine.inlines[i];
+		const inlineStyle = copyInlineStyles(inline);
+		if (inlineStyle) {
+			inlineStyles[i] = inlineStyle;
+		}
+		for(let j = 0; j < inline.text.length; j+=1) {
+			inlinesRef[k] = i;
+			k += 1;
+		}
+	}
+
+	for (const range of flips) {
+		let [start, end] = range;
+		while (end > start) {
+			const c = flipped[start];
+			flipped[start] = flipped[end];
+			flipped[end] = c;
+			const iRef = inlinesRef[start];
+			inlinesRef[start] = inlinesRef[end];
+			inlinesRef[end] = iRef;
+			const l = embeddingLevels.levels[start];
+			embeddingLevels.levels[start] = embeddingLevels.levels[end];
+			embeddingLevels.levels[end] = l;
+			start += 1;
+			end -= 1;
+		}
+	}
+	for (let index = 0; index < flipped.length; index += 1) {
+		const char = flipped[index];
+		const level = embeddingLevels.levels[index];
+		const mirroredChar =
+			level & 1 //odd number means RTL
+				? this.bidi.getMirroredCharacter(char)
+				: null;
+		if (mirroredChar) {
+			flipped[index] = mirroredChar;
+		}
+	}
+
+	for(let i = 0 ; i < flipped.length; i += 1) {
+		const inlineIndex = inlinesRef[i];
+		const inlineStyle = inlineStyles[inlineIndex];
+		const flippedChar = flipped[i];
+		flipped[i] = (flippedChar === '\u200E' || flippedChar === '\u200F') ? '': flippedChar;
+		if (inlineStyle) {
+			flipped[i] = Object.assign({ text: flipped[i] }, inlineStyle);
+		}
+	}
+
+	const clonedNode = Object.assign({}, textNode, { text: flipped });
+	const measured = this.docMeasure.measureLeaf(clonedNode);
+	const line = new Line(this.writer.context().availableWidth);
+	for (const inline of measured._inlines) {
+		line.addInline(inline);
+	}
+	line.lastLineInParagraph = ltrLine.lastLineInParagraph;
+	return line;
+};
+
+
+LayoutBuilder.prototype.buildNextLine = function (textNode) {
 	function cloneInline(inline) {
 		var newInline = inline.constructor();
 		for (var key in inline) {
@@ -737,44 +831,68 @@ LayoutBuilder.prototype.buildNextLine = function (textNode) {
 		return null;
 	}
 
-	var line = new Line(this.writer.context().availableWidth);
-	var textTools = new TextTools(null);
+	const makeLine = (node) => {
+		var line = new Line(this.writer.context().availableWidth);
 
-	var isForceContinue = false;
-	while (textNode._inlines && textNode._inlines.length > 0 &&
-		(line.hasEnoughSpaceForInline(textNode._inlines[0], textNode._inlines.slice(1)) || isForceContinue)) {
-		var isHardWrap = false;
-		var inline = textNode._inlines.shift();
-		isForceContinue = false;
+		var textTools = new TextTools(null);
 
-		if (!inline.noWrap && inline.text.length > 1 && inline.width > line.getAvailableWidth()) {
-			var widthPerChar = inline.width / inline.text.length;
-			var maxChars = Math.floor(line.getAvailableWidth() / widthPerChar);
-			if (maxChars < 1) {
-				maxChars = 1;
+		var isForceContinue = false;
+		while (
+			node._inlines &&
+			node._inlines.length > 0 &&
+			(line.hasEnoughSpaceForInline(node._inlines[0], node._inlines.slice(1)) ||
+				isForceContinue)
+		) {
+			var isHardWrap = false;
+			var inline = node._inlines.shift();
+			isForceContinue = false;
+
+			if (
+				!inline.noWrap &&
+				inline.text.length > 1 &&
+				inline.width > line.getAvailableWidth()
+			) {
+				var widthPerChar = inline.width / inline.text.length;
+				var maxChars = Math.floor(line.getAvailableWidth() / widthPerChar);
+				if (maxChars < 1) {
+					maxChars = 1;
+				}
+				if (maxChars < inline.text.length) {
+					var newInline = cloneInline(inline);
+
+					newInline.text = inline.text.substr(maxChars);
+					inline.text = inline.text.substr(0, maxChars);
+
+					newInline.width = textTools.widthOfString(
+						newInline.text,
+						newInline.font,
+						newInline.fontSize,
+						newInline.characterSpacing,
+						newInline.fontFeatures
+					);
+					inline.width = textTools.widthOfString(
+						inline.text,
+						inline.font,
+						inline.fontSize,
+						inline.characterSpacing,
+						inline.fontFeatures
+					);
+
+					node._inlines.unshift(newInline);
+					isHardWrap = true;
+				}
 			}
-			if (maxChars < inline.text.length) {
-				var newInline = cloneInline(inline);
+			line.addInline(inline, true);
 
-				newInline.text = inline.text.substr(maxChars);
-				inline.text = inline.text.substr(0, maxChars);
-
-				newInline.width = textTools.widthOfString(newInline.text, newInline.font, newInline.fontSize, newInline.characterSpacing, newInline.fontFeatures);
-				inline.width = textTools.widthOfString(inline.text, inline.font, inline.fontSize, inline.characterSpacing, inline.fontFeatures);
-
-				textNode._inlines.unshift(newInline);
-				isHardWrap = true;
-			}
+			isForceContinue = inline.noNewLine && !isHardWrap;
 		}
-
-		line.addInline(inline);
-
-		isForceContinue = inline.noNewLine && !isHardWrap;
-	}
-
-	line.lastLineInParagraph = textNode._inlines.length === 0;
-
-	return line;
+		line.lastLineInParagraph = node._inlines.length === 0;
+		return line;
+	};
+	const ltrLine = makeLine(textNode);
+	const lineText = ltrLine.inlines.map((inline) => inline.text).join("");
+	return this.handleRtl(textNode, ltrLine, lineText);
+	// return ltrLine;
 };
 
 // images

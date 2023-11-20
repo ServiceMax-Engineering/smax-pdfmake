@@ -346,6 +346,7 @@ function measure(fontProvider, textArray, styleContextStack) {
 
 		item.alignment = getStyleProperty(item, styleContextStack, 'alignment', 'left');
 		item.font = font;
+		item.fontName = fontName;
 		item.fontSize = fontSize;
 		item.fontFeatures = fontFeatures;
 		item.characterSpacing = characterSpacing;

@@ -142,11 +142,15 @@ PdfPrinter.prototype.createPdfKitDocument = function (docDefinition, options) {
 	if (options.tableLayouts) {
 		builder.registerTableLayouts(options.tableLayouts);
 	}
-
-	var pages = builder.layoutDocument(docDefinition.content, this.fontProvider, docDefinition.styles || {}, docDefinition.defaultStyle || {
+	const defaultSyle =  docDefinition.defaultStyle || {
 		fontSize: 12,
-		font: 'Roboto'
-	}, docDefinition.background, docDefinition.header, docDefinition.footer, docDefinition.images, docDefinition.watermark, docDefinition.pageBreakBefore);
+		font: "Roboto",
+	};
+	if (defaultSyle.dir === "rtl" && !defaultSyle.alignment) {
+		defaultSyle.alignment = "right";
+	}
+
+	var pages = builder.layoutDocument(docDefinition.content, this.fontProvider, docDefinition.styles || {}, defaultSyle, docDefinition.background, docDefinition.header, docDefinition.footer, docDefinition.images, docDefinition.watermark, docDefinition.pageBreakBefore);
 	var maxNumberPages = docDefinition.maxPagesNumber || -1;
 	if (isNumber(maxNumberPages) && maxNumberPages > -1) {
 		pages = pages.slice(0, maxNumberPages);
