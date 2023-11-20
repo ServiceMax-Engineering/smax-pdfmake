@@ -240,6 +240,7 @@ DocMeasure.prototype.measureLeaf = function (node) {
 	node._inlines = data.items;
 	node._minWidth = data.minWidth;
 	node._maxWidth = data.maxWidth;
+	node._dir = node.dir;
 
 	return node;
 };
