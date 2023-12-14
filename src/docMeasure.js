@@ -596,6 +596,7 @@ DocMeasure.prototype.measureTable = function (node) {
 
 	node._minWidth = measures.min + node._offsets.total;
 	node._maxWidth = measures.max + node._offsets.total;
+	node._alignment = this.styleStack.getProperty('alignment');
 
 	return node;
 

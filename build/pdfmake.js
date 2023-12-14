@@ -3375,8 +3375,8 @@ __webpack_require__(68309);
 __webpack_require__(33161);
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : String(i); }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; _setPrototypeOf(subClass, superClass); }
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
@@ -3654,7 +3654,6 @@ function SlowBuffer(length) {
 Buffer.isBuffer = function isBuffer(b) {
   return b != null && b._isBuffer === true && b !== Buffer.prototype; // so Buffer.isBuffer(Buffer.prototype) will be false
 };
-
 Buffer.compare = function compare(a, b) {
   if (isInstance(a, Uint8Array)) a = Buffer.from(a, a.offset, a.byteLength);
   if (isInstance(b, Uint8Array)) b = Buffer.from(b, b.offset, b.byteLength);
@@ -3765,7 +3764,6 @@ function byteLength(string, encoding) {
         if (loweredCase) {
           return mustMatch ? -1 : utf8ToBytes(string).length; // assume utf8
         }
-
         encoding = ('' + encoding).toLowerCase();
         loweredCase = true;
     }
@@ -12994,7 +12992,7 @@ module.exports = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 57295:
+/***/ 90029:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13875,7 +13873,6 @@ var non_ASCII_controls_characters = [
 /* ZERO WIDTH NO-BREAK SPACE */, 0xfff9, 0xfffc
 /* [CONTROL CHARACTERS] */, 0x1d173, 0x1d17a
 /* [MUSICAL CONTROL CHARACTERS] */];
-
 var non_character_codepoints = [
 /**
  * C.4 Non-character code points
@@ -17672,7 +17669,6 @@ var AnnotationsMixin = {
     if (options.Subtype === 'Link' && typeof options.F === 'undefined') {
       options.F = 1 << 2; // Print Annotation Flag
     }
-
     if (options.Subtype !== 'Link') {
       if (options.C == null) {
         options.C = this._normalizeColor(options.color || [0, 0, 0]);
@@ -18612,7 +18608,6 @@ var AcroFormMixin = {
     if (result !== 0) {
       options.Q = result; // default
     }
-
     return options;
   },
   _resolveFont: function _resolveFont(options) {
@@ -22338,7 +22333,6 @@ var SVGtoPDF = function SVGtoPDF(doc, svg, x, y, options) {
           }
           r2 = Math.max(r2, d * multiplier * (1 + 1e-6)); // fix for edge-case gradients see issue #84
         }
-
         if (spread === 'reflect' || spread === 'repeat') {
           var inv = inverseMatrix(matrix),
             corner1 = transformPoint([bBox[0], bBox[1]], inv),
@@ -22356,7 +22350,6 @@ var SVGtoPDF = function SVGtoPDF(doc, svg, x, y, options) {
           nBefore = Math.ceil(nBefore + 0.5);
           nTotal = nBefore + 1 + nAfter; // How many times the gradient needs to be repeated to fill the object bounding box
         }
-
         if (this.name === 'linearGradient') {
           grad = doc.linearGradient(x1 - nBefore * (x2 - x1), y1 - nBefore * (y2 - y1), x2 + nAfter * (x2 - x1), y2 + nAfter * (y2 - y1));
         } else {
@@ -51813,7 +51806,7 @@ module.exports = __webpack_require__(17187).EventEmitter;
 
 /***/ }),
 
-/***/ 76308:
+/***/ 73855:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
@@ -52580,8 +52573,8 @@ __webpack_require__(73210);
 var _;
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : String(i); }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; _setPrototypeOf(subClass, superClass); }
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -52892,7 +52885,6 @@ var head = new r.Struct({
   // 0 for short offsets, 1 for long
   glyphDataFormat: r.int16 // 0 for current format
 });
-
 var hhea = new r.Struct({
   version: r.int32,
   ascent: r.int16,
@@ -52919,7 +52911,6 @@ var hhea = new r.Struct({
   // 0 for current format
   numberOfMetrics: r.uint16 // Number of advance widths in 'hmtx' table
 });
-
 var HmtxEntry = new r.Struct({
   advance: r.uint16,
   bearing: r.int16
@@ -53505,7 +53496,6 @@ var OS2 = new r.VersionedStruct(r.uint16, {
     // The minimum Unicode index in this font
     usLastCharIndex: r.uint16 // The maximum Unicode index in this font
   },
-
   // The Apple version of this table ends here, but the Microsoft one continues on...
   0: {},
   1: {
@@ -53567,7 +53557,6 @@ var post = new r.VersionedStruct(r.fixed32, {
     // Minimum memory usage when a TrueType font is downloaded as a Type 1 font
     maxMemType1: r.uint32 // Maximum memory usage when a TrueType font is downloaded as a Type 1 font
   },
-
   1: {},
   // version 1 has no additional fields
   2: {
@@ -54430,7 +54419,6 @@ var CFFCustomEncoding = new r.VersionedStruct(new CFFEncodingVersion(), {
     ranges: new r.Array(Range1, 'nRanges')
   } // TODO: supplement?
 });
-
 var CFFEncoding = new PredefinedOp([StandardEncoding, ExpertEncoding], new CFFPointer(CFFCustomEncoding, {
   lazy: true
 })); // Decodes an array of ranges until the total
@@ -54904,7 +54892,6 @@ var BaseCoord = new r.VersionedStruct(r.uint16, {
     // Design units only
     coordinate: r.int16 // X or Y value, in design units
   },
-
   2: {
     // Design units plus contour point
     coordinate: r.int16,
@@ -54913,7 +54900,6 @@ var BaseCoord = new r.VersionedStruct(r.uint16, {
     // GlyphID of control glyph
     baseCoordPoint: r.uint16 // Index of contour point on the referenceGlyph
   },
-
   3: {
     // Design units plus Device table
     coordinate: r.int16,
@@ -54921,7 +54907,6 @@ var BaseCoord = new r.VersionedStruct(r.uint16, {
     deviceTable: new r.Pointer(r.uint16, Device) // Device table for X or Y value
   }
 });
-
 var BaseValues = new r.Struct({
   defaultIndex: r.uint16,
   // Index of default baseline for this script-same index in the BaseTagList
@@ -54939,7 +54924,6 @@ var FeatMinMaxRecord = new r.Struct({
     type: 'parent'
   }) // May be NULL
 });
-
 var MinMax = new r.Struct({
   minCoord: new r.Pointer(r.uint16, BaseCoord),
   // May be NULL
@@ -54949,7 +54933,6 @@ var MinMax = new r.Struct({
   // May be 0
   featMinMaxRecords: new r.Array(FeatMinMaxRecord, 'featMinMaxCount') // In alphabetical order
 });
-
 var BaseLangSysRecord = new r.Struct({
   tag: new r.String(4),
   // 4-byte language system identification tag
@@ -54966,7 +54949,6 @@ var BaseScript = new r.Struct({
   // May be 0
   baseLangSysRecords: new r.Array(BaseLangSysRecord, 'baseLangSysCount') // in alphabetical order by BaseLangSysTag
 });
-
 var BaseScriptRecord = new r.Struct({
   tag: new r.String(4),
   // 4-byte script identification tag
@@ -54988,7 +54970,6 @@ var BASE = new r.VersionedStruct(r.uint32, {
     // May be NULL
     vertAxis: new r.Pointer(r.uint16, Axis) // May be NULL
   },
-
   0x00010000: {},
   0x00010001: {
     itemVariationStore: new r.Pointer(r.uint32, ItemVariationStore)
@@ -55452,14 +55433,12 @@ var GaspRange = new r.Struct({
   'grayscale', 'gridfit', 'symmetricSmoothing', 'symmetricGridfit' // only in version 1, for ClearType
   ])
 });
-
 var gasp = new r.Struct({
   version: r.uint16,
   // set to 0
   numRanges: r.uint16,
   gaspRanges: new r.Array(GaspRange, 'numRanges') // Sorted by ppem
 });
-
 var DeviceRecord = new r.Struct({
   pixelSize: r.uint8,
   maximumWidth: r.uint8,
@@ -55547,7 +55526,6 @@ var KernTable = new r.VersionedStruct('version', {
     // If set to 1, kerning is perpendicular to the flow of the text
     'override' // If set to 1 the value in this table replaces the accumulated value
     ]),
-
     subtable: KernSubtable,
     padding: new r.Reserved(r.uint8, function (t) {
       return t.length - t._currentOffset;
@@ -55562,7 +55540,6 @@ var KernTable = new r.VersionedStruct('version', {
     // Set if table has cross-stream kerning values
     'vertical' // Set if table has vertical kerning values
     ]),
-
     format: r.uint8,
     tupleIndex: r.uint16,
     subtable: KernSubtable,
@@ -55626,7 +55603,6 @@ var Ratio = new r.Struct({
   // Starting y-Ratio value
   yEndRatio: r.uint8 // Ending y-Ratio value
 });
-
 var vTable = new r.Struct({
   yPelHeight: r.uint16,
   // yPelHeight to which values apply
@@ -55634,7 +55610,6 @@ var vTable = new r.Struct({
   // Maximum value (in pels) for this yPelHeight
   yMin: r.int16 // Minimum value (in pels) for this yPelHeight
 });
-
 var VdmxGroup = new r.Struct({
   recs: r.uint16,
   // Number of height records in this group
@@ -55644,7 +55619,6 @@ var VdmxGroup = new r.Struct({
   // Ending yPelHeight
   entries: new r.Array(vTable, 'recs') // The VDMX records
 });
-
 var VDMX = new r.Struct({
   version: r.uint16,
   // Version number (0 or 1)
@@ -55658,7 +55632,6 @@ var VDMX = new r.Struct({
   // Offset to the VDMX group for this ratio range
   groups: new r.Array(VdmxGroup, 'numRecs') // The actual VDMX groupings
 });
-
 var vhea = new r.Struct({
   version: r.uint16,
   // Version number of the Vertical Header Table
@@ -55685,7 +55658,6 @@ var vhea = new r.Struct({
   // Set to 0
   numberOfMetrics: r.uint16 // Number of advance heights in the Vertical Metrics table
 });
-
 var VmtxEntry = new r.Struct({
   advance: r.uint16,
   // The advance height of the glyph
@@ -55802,7 +55774,6 @@ var LookupTable = function LookupTable(ValueType) {
     0: {
       values: new UnboundedArray(ValueType) // length == number of glyphs maybe?
     },
-
     2: {
       binarySearchHeader: BinarySearchHeader,
       segments: new r.Array(LookupSegmentSingle, function (t) {
@@ -57178,7 +57149,6 @@ var RTL = {
   // Palmyrene
   phlp: true // Psalter Pahlavi
 };
-
 function direction(script) {
   if (RTL[script]) {
     return 'rtl';
@@ -60376,7 +60346,6 @@ function finalReordering(font, glyphs, plan) {
           newPos = start; // No move.
         }
       }
-
       if (start < newPos && glyphs[newPos].shaperInfo.position !== POSITIONS.Pre_M) {
         // Now go see if there's actually any matras...
         for (var _i19 = newPos; _i19 > start; _i19--) {
@@ -60889,7 +60858,6 @@ var SHAPERS = {
   // Latin
   DFLT: DefaultShaper // Default
 };
-
 function choose(script) {
   if (!Array.isArray(script)) {
     script = [script];
@@ -63863,7 +63831,6 @@ var CFFSubset = /*#__PURE__*/function (_Subset2) {
         res.push(Buffer.from([11])); // return
       }
     }
-
     return res;
   };
   _proto42.subsetFontdict = function subsetFontdict(topDict) {
@@ -67003,7 +66970,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(6225).isFunction);
 var isUndefined = (__webpack_require__(6225).isUndefined);
 var isNull = (__webpack_require__(6225).isNull);
-var FileSaver = __webpack_require__(76308);
+var FileSaver = __webpack_require__(73855);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -68142,6 +68109,7 @@ DocMeasure.prototype.measureTable = function (node) {
 
 	node._minWidth = measures.min + node._offsets.total;
 	node._maxWidth = measures.max + node._offsets.total;
+	node._alignment = this.styleStack.getProperty('alignment');
 
 	return node;
 
@@ -69461,6 +69429,19 @@ function getPattern(color, patterns) {
 	return [patterns[color[0]], color[1]];
 }
 
+function getOffset(alignment, availableWidth, nodeWidth) {
+	let offset = 0;
+	switch (alignment) {
+		case "right":
+			offset = availableWidth - nodeWidth;
+			break;
+		case "center":
+			offset = (availableWidth - nodeWidth) / 2;
+			break;
+	}
+	return Math.max(0, offset);
+}
+
 module.exports = {
 	isString: isString,
 	isNumber: isNumber,
@@ -69475,7 +69456,8 @@ module.exports = {
 	offsetVector: offsetVector,
 	getNodeId: getNodeId,
 	isPattern: isPattern,
-	getPattern: getPattern
+	getPattern: getPattern,
+	getOffset: getOffset,
 };
 
 
@@ -69566,6 +69548,7 @@ var getNodeId = (__webpack_require__(6225).getNodeId);
 var isFunction = (__webpack_require__(6225).isFunction);
 var TextTools = __webpack_require__(31350);
 var StyleContextStack = __webpack_require__(47597);
+const { getOffset } = __webpack_require__(6225);
 var isNumber = (__webpack_require__(6225).isNumber);
 
 function addAll(target, otherArray) {
@@ -70032,12 +70015,20 @@ LayoutBuilder.prototype.processColumns = function (columnNode) {
 	var columns = columnNode.columns;
 	var availableWidth = this.writer.context().availableWidth;
 	var gaps = gapArray(columnNode._gap);
-
+	let totalGap = 0;
 	if (gaps) {
-		availableWidth -= (gaps.length - 1) * columnNode._gap;
+		totalGap = (gaps.length - 1) * columnNode._gap
+		availableWidth -= totalGap;
 	}
 
 	ColumnCalculator.buildColumnWidths(columns, availableWidth);
+	let nodeWidth = columns.reduce((acc, column) => acc + column._calcWidth, 0) + totalGap;
+	let offset = getOffset(columnNode.alignment, availableWidth, nodeWidth);
+	if(gaps) {
+		gaps[0] += offset;
+	} else {
+		gaps = [offset];
+	}
 	var result = this.processRow(columns, columns, gaps);
 	addAll(columnNode.positions, result.positions);
 
@@ -70647,7 +70638,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(57295));
+var PdfKit = _interopDefault(__webpack_require__(90029));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -72513,6 +72504,7 @@ module.exports = SVGMeasure;
 
 
 var ColumnCalculator = __webpack_require__(64498);
+const { offsetVector, getOffset } = __webpack_require__(6225);
 var isFunction = (__webpack_require__(6225).isFunction);
 var isNumber = (__webpack_require__(6225).isNumber);
 
@@ -72533,6 +72525,19 @@ TableProcessor.prototype.beginTable = function (writer) {
 	ColumnCalculator.buildColumnWidths(tableNode.table.widths, availableWidth);
 
 	this.tableWidth = tableNode._offsets.total + getTableInnerContentWidth();
+	const tableOffset = getOffset(this.tableNode._alignment, writer.context().availableWidth, this.tableWidth);
+	if (tableOffset > 0) {
+		const offsets = tableNode._offsets.offsets;
+		if (Array.isArray(offsets) && offsets.length > 0) {
+			const newOffsets = [...offsets];
+			newOffsets[0] += tableOffset;
+			const newOffsetsTotal = newOffsets.reduce((a,c) => a +c, 0);
+			tableNode._offsets = { offsets: newOffsets, total: newOffsetsTotal};
+			this.offsets = tableNode._offsets;
+		}
+	}
+	this.tableOffset = tableOffset;
+
 	this.rowSpanData = prepareRowSpanData();
 	this.cleanUpRepeatables = false;
 
@@ -72658,6 +72663,13 @@ TableProcessor.prototype.beginRow = function (rowIndex, writer) {
 	writer.context().moveDown(this.rowPaddingTop);
 };
 
+TableProcessor.prototype.addVector = function(writer, vector, ...rest) {
+	if (this.tableOffset > 0) {
+		offsetVector(vector, this.tableOffset, 0);
+	}
+	writer.addVector(vector, ...rest);
+};
+
 TableProcessor.prototype.drawHorizontalLine = function (lineIndex, writer, overrideY) {
 	var lineWidth = this.layout.hLineWidth(lineIndex, this.tableNode);
 	if (lineWidth) {
@@ -72748,7 +72760,7 @@ TableProcessor.prototype.drawHorizontalLine = function (lineIndex, writer, overr
 
 			if (shouldDrawLine) {
 				if (currentLine && currentLine.width) {
-					writer.addVector({
+					this.addVector(writer, {
 						type: 'line',
 						x1: currentLine.left,
 						x2: currentLine.left + currentLine.width,
@@ -72828,7 +72840,7 @@ TableProcessor.prototype.drawVerticalLine = function (x, y0, y1, vLineColIndex, 
 	if (borderColor == null) {
 		borderColor = isFunction(this.layout.vLineColor) ? this.layout.vLineColor(vLineColIndex, this.tableNode, vLineRowIndex) : this.layout.vLineColor;
 	}
-	writer.addVector({
+	this.addVector(writer, {
 		type: 'line',
 		x1: x + width / 2,
 		x2: x + width / 2,
@@ -72959,7 +72971,7 @@ TableProcessor.prototype.endRow = function (rowIndex, writer, pageBreaks) {
 					var bgWidth = x2f - x1f;
 					var bgHeight = y2f - y1f;
 					if (fillColor) {
-						writer.addVector({
+						this.addVector(writer, {
 							type: 'rect',
 							x: x1f,
 							y: y1f,
@@ -72972,7 +72984,7 @@ TableProcessor.prototype.endRow = function (rowIndex, writer, pageBreaks) {
 					}
 
 					if (overlayPattern) {
-						writer.addVector({
+						this.addVector(writer, {
 							type: 'rect',
 							x: x1f,
 							y: y1f,

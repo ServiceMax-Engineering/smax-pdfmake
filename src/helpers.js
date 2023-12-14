@@ -108,6 +108,19 @@ function getPattern(color, patterns) {
 	return [patterns[color[0]], color[1]];
 }
 
+function getOffset(alignment, availableWidth, nodeWidth) {
+	let offset = 0;
+	switch (alignment) {
+		case "right":
+			offset = availableWidth - nodeWidth;
+			break;
+		case "center":
+			offset = (availableWidth - nodeWidth) / 2;
+			break;
+	}
+	return Math.max(0, offset);
+}
+
 module.exports = {
 	isString: isString,
 	isNumber: isNumber,
@@ -122,5 +135,6 @@ module.exports = {
 	offsetVector: offsetVector,
 	getNodeId: getNodeId,
 	isPattern: isPattern,
-	getPattern: getPattern
+	getPattern: getPattern,
+	getOffset: getOffset,
 };

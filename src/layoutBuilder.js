@@ -19,6 +19,7 @@ var getNodeId = require('./helpers').getNodeId;
 var isFunction = require('./helpers').isFunction;
 var TextTools = require('./textTools');
 var StyleContextStack = require('./styleContextStack');
+const { getOffset } = require("./helpers");
 var isNumber = require('./helpers').isNumber;
 
 function addAll(target, otherArray) {
@@ -485,12 +486,20 @@ LayoutBuilder.prototype.processColumns = function (columnNode) {
 	var columns = columnNode.columns;
 	var availableWidth = this.writer.context().availableWidth;
 	var gaps = gapArray(columnNode._gap);
-
+	let totalGap = 0;
 	if (gaps) {
-		availableWidth -= (gaps.length - 1) * columnNode._gap;
+		totalGap = (gaps.length - 1) * columnNode._gap
+		availableWidth -= totalGap;
 	}
 
 	ColumnCalculator.buildColumnWidths(columns, availableWidth);
+	let nodeWidth = columns.reduce((acc, column) => acc + column._calcWidth, 0) + totalGap;
+	let offset = getOffset(columnNode.alignment, availableWidth, nodeWidth);
+	if(gaps) {
+		gaps[0] += offset;
+	} else {
+		gaps = [offset];
+	}
 	var result = this.processRow(columns, columns, gaps);
 	addAll(columnNode.positions, result.positions);
 
