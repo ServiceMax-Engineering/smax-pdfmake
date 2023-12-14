@@ -1,6 +1,7 @@
 'use strict';
 
 var ColumnCalculator = require('./columnCalculator');
+const { offsetVector, getOffset } = require('./helpers');
 var isFunction = require('./helpers').isFunction;
 var isNumber = require('./helpers').isNumber;
 var isPositiveInteger = require('./helpers').isPositiveInteger;
@@ -22,6 +23,19 @@ TableProcessor.prototype.beginTable = function (writer) {
 	ColumnCalculator.buildColumnWidths(tableNode.table.widths, availableWidth, this.offsets.total, tableNode);
 
 	this.tableWidth = tableNode._offsets.total + getTableInnerContentWidth();
+	const tableOffset = getOffset(this.tableNode._alignment, writer.context().availableWidth, this.tableWidth);
+	if (tableOffset > 0) {
+		const offsets = tableNode._offsets.offsets;
+		if (Array.isArray(offsets) && offsets.length > 0) {
+			const newOffsets = [...offsets];
+			newOffsets[0] += tableOffset;
+			const newOffsetsTotal = newOffsets.reduce((a,c) => a +c, 0);
+			tableNode._offsets = { offsets: newOffsets, total: newOffsetsTotal};
+			this.offsets = tableNode._offsets;
+		}
+	}
+	this.tableOffset = tableOffset;
+
 	this.rowSpanData = prepareRowSpanData();
 	this.cleanUpRepeatables = false;
 
@@ -176,6 +190,13 @@ TableProcessor.prototype.beginRow = function (rowIndex, writer) {
 	writer.context().moveDown(this.rowPaddingTop);
 };
 
+TableProcessor.prototype.addVector = function(writer, vector, ...rest) {
+	if (this.tableOffset > 0) {
+		offsetVector(vector, this.tableOffset, 0);
+	}
+	writer.addVector(vector, ...rest);
+};
+
 TableProcessor.prototype.drawHorizontalLine = function (lineIndex, writer, overrideY, moveDown = true, forcePage) {
 	var lineWidth = this.layout.hLineWidth(lineIndex, this.tableNode);
 	if (lineWidth) {
@@ -266,7 +287,7 @@ TableProcessor.prototype.drawHorizontalLine = function (lineIndex, writer, overr
 
 			if (shouldDrawLine) {
 				if (currentLine && currentLine.width) {
-					writer.addVector({
+					this.addVector(writer, {
 						type: 'line',
 						x1: currentLine.left,
 						x2: currentLine.left + currentLine.width,
@@ -348,7 +369,7 @@ TableProcessor.prototype.drawVerticalLine = function (x, y0, y1, vLineColIndex, 
 	if (borderColor == null) {
 		borderColor = isFunction(this.layout.vLineColor) ? this.layout.vLineColor(vLineColIndex, this.tableNode, vLineRowIndex) : this.layout.vLineColor;
 	}
-	writer.addVector({
+	this.addVector(writer, {
 		type: 'line',
 		x1: x + width / 2,
 		x2: x + width / 2,
@@ -496,7 +517,7 @@ TableProcessor.prototype.endRow = function (rowIndex, writer, pageBreaks) {
 					var bgWidth = x2f - x1f;
 					var bgHeight = y2f - y1f;
 					if (fillColor) {
-						writer.addVector({
+						this.addVector(writer, {
 							type: 'rect',
 							x: x1f,
 							y: y1f,
@@ -511,7 +532,7 @@ TableProcessor.prototype.endRow = function (rowIndex, writer, pageBreaks) {
 					}
 
 					if (overlayPattern) {
-						writer.addVector({
+						this.addVector(writer, {
 							type: 'rect',
 							x: x1f,
 							y: y1f,
