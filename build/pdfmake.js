@@ -16214,8 +16214,6 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
   for (var _i = 0; _i < flipped.length; _i += 1) {
     var inlineIndex = inlinesRef[_i];
     var _inlineStyle = inlineStyles[inlineIndex];
-    var flippedChar = flipped[_i];
-    flipped[_i] = flippedChar === "\u200E" || flippedChar === "\u200F" ? '' : flippedChar;
     if (_inlineStyle) {
       flipped[_i] = Object.assign({
         text: flipped[_i]
@@ -16226,7 +16224,7 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
     text: flipped
   });
   var measured = this.docMeasure.measureLeaf(clonedNode);
-  var line = new Line(this.writer.context().availableWidth);
+  var line = new Line(this.writer.context().availableWidth, ltrLine.dir);
   for (var _iterator2 = _createForOfIteratorHelperLoose(measured._inlines), _step2; !(_step2 = _iterator2()).done;) {
     var _inline = _step2.value;
     line.addInline(_inline);
@@ -16247,7 +16245,7 @@ LayoutBuilder.prototype.buildNextLine = function (textNode) {
     return null;
   }
   var makeLine = function makeLine(node) {
-    var line = new Line(_this4.writer.context().availableWidth);
+    var line = new Line(_this4.writer.context().availableWidth, node._dir);
     var textTools = new TextTools(null);
     var isForceContinue = false;
     while (node._inlines && node._inlines.length > 0 && (line.hasEnoughSpaceForInline(node._inlines[0], node._inlines.slice(1)) || isForceContinue)) {
@@ -16316,7 +16314,7 @@ module.exports = LayoutBuilder;
 
 /***/ }),
 
-/***/ 95509:
+/***/ 12428:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -55440,7 +55438,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(16920).isFunction);
 var isUndefined = (__webpack_require__(16920).isUndefined);
 var isNull = (__webpack_require__(16920).isNull);
-var FileSaver = __webpack_require__(35705);
+var FileSaver = __webpack_require__(71616);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -57502,6 +57500,9 @@ ElementWriter.prototype.alignLine = function (line) {
 		case 'center':
 			offset = (width - lineWidth) / 2;
 			break;
+		case 'justify':
+			offset = (line.dir === "rtl" && line.lastLineInParagraph) ? (width - lineWidth): 0;
+			break;
 	}
 
 	if (offset) {
@@ -58087,12 +58088,13 @@ module.exports = ImageMeasure;
  * @this {Line}
  * @param {Number} Maximum width this line can have
  */
-function Line(maxWidth) {
+function Line(maxWidth, dir) {
 	this.maxWidth = maxWidth;
 	this.leadingCut = 0;
 	this.trailingCut = 0;
 	this.inlineWidths = 0;
 	this.inlines = [];
+	this.dir = dir;
 }
 
 Line.prototype.getAscenderHeight = function () {
@@ -58365,7 +58367,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(95509));
+var PdfKit = _interopDefault(__webpack_require__(12428));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -61279,6 +61281,10 @@ function getStyleProperty(item, styleContextStack, property, defaultValue) {
 	}
 }
 
+function isMarker(item) {
+	return item.text === "\u200E" || item.text === "\u200F";
+}
+
 function measure(fontProvider, textArray, styleContextStack) {
 	var normalized = normalizeTextArray(textArray, styleContextStack);
 
@@ -61293,7 +61299,7 @@ function measure(fontProvider, textArray, styleContextStack) {
 
 	normalized.forEach(function (item) {
 		var fontName = getStyleProperty(item, styleContextStack, 'font', 'Roboto');
-		var fontSize = getStyleProperty(item, styleContextStack, 'fontSize', 12);
+		var fontSize = isMarker(item) ? 0 : getStyleProperty(item, styleContextStack, 'fontSize', 12);
 		var fontFeatures = getStyleProperty(item, styleContextStack, 'fontFeatures', null);
 		var bold = getStyleProperty(item, styleContextStack, 'bold', false);
 		var italics = getStyleProperty(item, styleContextStack, 'italics', false);
@@ -61427,7 +61433,7 @@ module.exports = TraversalTracker;
 
 /***/ }),
 
-/***/ 35705:
+/***/ 71616:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),

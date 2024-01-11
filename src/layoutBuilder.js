@@ -1118,8 +1118,6 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 	for(let i = 0 ; i < flipped.length; i += 1) {
 		const inlineIndex = inlinesRef[i];
 		const inlineStyle = inlineStyles[inlineIndex];
-		const flippedChar = flipped[i];
-		flipped[i] = (flippedChar === '\u200E' || flippedChar === '\u200F') ? '': flippedChar;
 		if (inlineStyle) {
 			flipped[i] = Object.assign({ text: flipped[i] }, inlineStyle);
 		}
@@ -1127,7 +1125,7 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 
 	const clonedNode = Object.assign({}, textNode, { text: flipped });
 	const measured = this.docMeasure.measureLeaf(clonedNode);
-	const line = new Line(this.writer.context().availableWidth);
+	const line = new Line(this.writer.context().availableWidth, ltrLine.dir);
 	for (const inline of measured._inlines) {
 		line.addInline(inline);
 	}
@@ -1150,7 +1148,7 @@ LayoutBuilder.prototype.buildNextLine = function (textNode) {
 	}
 
 	const makeLine = (node) => {
-		var line = new Line(this.writer.context().availableWidth);
+		var line = new Line(this.writer.context().availableWidth, node._dir);
 
 		var textTools = new TextTools(null);
 

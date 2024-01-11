@@ -66,6 +66,9 @@ ElementWriter.prototype.alignLine = function (line) {
 		case 'center':
 			offset = (width - lineWidth) / 2;
 			break;
+		case 'justify':
+			offset = (line.dir === "rtl" && line.lastLineInParagraph) ? (width - lineWidth): 0;
+			break;
 	}
 
 	if (offset) {
