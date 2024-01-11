@@ -12992,7 +12992,7 @@ module.exports = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 24089:
+/***/ 82553:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -51806,7 +51806,7 @@ module.exports = __webpack_require__(17187).EventEmitter;
 
 /***/ }),
 
-/***/ 68557:
+/***/ 59738:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
@@ -66970,7 +66970,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(6225).isFunction);
 var isUndefined = (__webpack_require__(6225).isUndefined);
 var isNull = (__webpack_require__(6225).isNull);
-var FileSaver = __webpack_require__(68557);
+var FileSaver = __webpack_require__(59738);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -68982,6 +68982,9 @@ ElementWriter.prototype.alignLine = function (line) {
 		case 'center':
 			offset = (width - lineWidth) / 2;
 			break;
+		case 'justify':
+			offset = (line.dir === "rtl" && line.lastLineInParagraph) ? (width - lineWidth): 0;
+			break;
 	}
 
 	if (offset) {
@@ -70330,8 +70333,6 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 	for(let i = 0 ; i < flipped.length; i += 1) {
 		const inlineIndex = inlinesRef[i];
 		const inlineStyle = inlineStyles[inlineIndex];
-		const flippedChar = flipped[i];
-		flipped[i] = (flippedChar === '\u200E' || flippedChar === '\u200F') ? '': flippedChar;
 		if (inlineStyle) {
 			flipped[i] = Object.assign({ text: flipped[i] }, inlineStyle);
 		}
@@ -70339,7 +70340,7 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 
 	const clonedNode = Object.assign({}, textNode, { text: flipped });
 	const measured = this.docMeasure.measureLeaf(clonedNode);
-	const line = new Line(this.writer.context().availableWidth);
+	const line = new Line(this.writer.context().availableWidth, ltrLine.dir);
 	for (const inline of measured._inlines) {
 		line.addInline(inline);
 	}
@@ -70362,7 +70363,7 @@ LayoutBuilder.prototype.buildNextLine = function (textNode) {
 	}
 
 	const makeLine = (node) => {
-		var line = new Line(this.writer.context().availableWidth);
+		var line = new Line(this.writer.context().availableWidth, node._dir);
 
 		var textTools = new TextTools(null);
 
@@ -70479,12 +70480,13 @@ module.exports = LayoutBuilder;
  * @this {Line}
  * @param {Number} Maximum width this line can have
  */
-function Line(maxWidth) {
+function Line(maxWidth, dir) {
 	this.maxWidth = maxWidth;
 	this.leadingCut = 0;
 	this.trailingCut = 0;
 	this.inlineWidths = 0;
 	this.inlines = [];
+	this.dir = dir;
 }
 
 Line.prototype.getAscenderHeight = function () {
@@ -70757,7 +70759,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(24089));
+var PdfKit = _interopDefault(__webpack_require__(82553));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -73665,6 +73667,10 @@ function getStyleProperty(item, styleContextStack, property, defaultValue) {
 	}
 }
 
+function isMarker(item) {
+	return item.text === "\u200E" || item.text === "\u200F";
+}
+
 function measure(fontProvider, textArray, styleContextStack) {
 	var normalized = normalizeTextArray(textArray, styleContextStack);
 
@@ -73679,7 +73685,7 @@ function measure(fontProvider, textArray, styleContextStack) {
 
 	normalized.forEach(function (item) {
 		var fontName = getStyleProperty(item, styleContextStack, 'font', 'Roboto');
-		var fontSize = getStyleProperty(item, styleContextStack, 'fontSize', 12);
+		var fontSize = isMarker(item) ? 0 : getStyleProperty(item, styleContextStack, 'fontSize', 12);
 		var fontFeatures = getStyleProperty(item, styleContextStack, 'fontFeatures', null);
 		var bold = getStyleProperty(item, styleContextStack, 'bold', false);
 		var italics = getStyleProperty(item, styleContextStack, 'italics', false);

@@ -283,6 +283,10 @@ function getStyleProperty(item, styleContextStack, property, defaultValue) {
 	}
 }
 
+function isMarker(item) {
+	return item.text === "\u200E" || item.text === "\u200F";
+}
+
 function measure(fontProvider, textArray, styleContextStack) {
 	var normalized = normalizeTextArray(textArray, styleContextStack);
 
@@ -297,7 +301,7 @@ function measure(fontProvider, textArray, styleContextStack) {
 
 	normalized.forEach(function (item) {
 		var fontName = getStyleProperty(item, styleContextStack, 'font', 'Roboto');
-		var fontSize = getStyleProperty(item, styleContextStack, 'fontSize', 12);
+		var fontSize = isMarker(item) ? 0 : getStyleProperty(item, styleContextStack, 'fontSize', 12);
 		var fontFeatures = getStyleProperty(item, styleContextStack, 'fontFeatures', null);
 		var bold = getStyleProperty(item, styleContextStack, 'bold', false);
 		var italics = getStyleProperty(item, styleContextStack, 'italics', false);
