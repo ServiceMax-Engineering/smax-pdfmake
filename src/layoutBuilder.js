@@ -1,5 +1,6 @@
 'use strict';
 const bidiFactory = require("bidi-js");
+const unicode = require('unicode-properties')
 var TraversalTracker = require('./traversalTracker');
 var DocPreprocessor = require('./docPreprocessor');
 var DocMeasure = require('./docMeasure');
@@ -1064,6 +1065,32 @@ function copyInlineStyles(inline) {
 	return styles;
 }
 
+function isRTLScript(string) {
+	const len = string.length;
+	let idx = 0;
+	const rtlScripts = {
+		Arabic: true,
+		Hebrew: true,
+	};
+	while (idx < len) {
+		let code = string.charCodeAt(idx++); // Check if this is a high surrogate
+
+		if (0xd800 <= code && code <= 0xdbff && idx < len) {
+			let next = string.charCodeAt(idx); // Check if this is a low surrogate
+
+			if (0xdc00 <= next && next <= 0xdfff) {
+				idx++;
+				code = ((code & 0x3ff) << 10) + (next & 0x3ff) + 0x10000;
+			}
+		}
+		const lang = unicode.getScript(code);
+		if (lang !== "Common" && lang !== "Inherited" && lang !== "Unknown") {
+			return rtlScripts[lang];
+		}
+	}
+	return false;
+}
+
 LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 	const defaultDirection = textNode._dir;
 	const embeddingLevels = this.bidi.getEmbeddingLevels(text, defaultDirection);
@@ -1072,16 +1099,12 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 		return ltrLine;
 	}
 	const flipped = text.split("");
-	const inlinesRef = new Array(flipped.length).fill(-1);
 	const inlineStyles = new Array(ltrLine.inlines.length).fill(null);
-	let k = 0;
-	for (let i = 0; i < ltrLine.inlines.length; i += 1) {
+	const inlinesRef = new Array(flipped.length).fill(-1);
+	for (let i = 0, k = 0; i < ltrLine.inlines.length; i += 1) {
 		const inline = ltrLine.inlines[i];
-		const inlineStyle = copyInlineStyles(inline);
-		if (inlineStyle) {
-			inlineStyles[i] = inlineStyle;
-		}
-		for(let j = 0; j < inline.text.length; j+=1) {
+		inlineStyles[i] = copyInlineStyles(inline);
+		for (let j = 0; j < inline.text.length; j += 1) {
 			inlinesRef[k] = i;
 			k += 1;
 		}
@@ -1093,12 +1116,15 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 			const c = flipped[start];
 			flipped[start] = flipped[end];
 			flipped[end] = c;
+
 			const iRef = inlinesRef[start];
 			inlinesRef[start] = inlinesRef[end];
 			inlinesRef[end] = iRef;
+
 			const l = embeddingLevels.levels[start];
 			embeddingLevels.levels[start] = embeddingLevels.levels[end];
 			embeddingLevels.levels[end] = l;
+
 			start += 1;
 			end -= 1;
 		}
@@ -1114,23 +1140,32 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 			flipped[index] = mirroredChar;
 		}
 	}
-
-	for(let i = 0 ; i < flipped.length; i += 1) {
-		const inlineIndex = inlinesRef[i];
-		const inlineStyle = inlineStyles[inlineIndex];
-		if (inlineStyle) {
-			flipped[i] = Object.assign({ text: flipped[i] }, inlineStyle);
+	let charIndex = 0;
+	const rtlTextChunks = [];
+	while (charIndex < flipped.length) {
+		let j = charIndex;
+		while (j < flipped.length && inlinesRef[j] == inlinesRef[charIndex]) {
+			j += 1;
 		}
+		const inlineIndex = inlinesRef[charIndex];
+		const slicedChunk = flipped.slice(charIndex, j);
+		let slicedText = slicedChunk.join("");
+		if (isRTLScript(slicedText)) {
+			slicedText = slicedChunk.reverse().join("");
+		}
+		rtlTextChunks.push(
+			Object.assign({ text: slicedText }, inlineStyles[inlineIndex])
+		);
+		charIndex = j;
 	}
-
-	const clonedNode = Object.assign({}, textNode, { text: flipped });
+	const clonedNode = Object.assign({}, textNode, { text: rtlTextChunks });
 	const measured = this.docMeasure.measureLeaf(clonedNode);
-	const line = new Line(this.writer.context().availableWidth, ltrLine.dir);
+	const rtlLine = new Line(this.writer.context().availableWidth, ltrLine.dir);
 	for (const inline of measured._inlines) {
-		line.addInline(inline);
+		rtlLine.addInline(inline);
 	}
-	line.lastLineInParagraph = ltrLine.lastLineInParagraph;
-	return line;
+	rtlLine.lastLineInParagraph = ltrLine.lastLineInParagraph;
+	return rtlLine;
 };
 
 

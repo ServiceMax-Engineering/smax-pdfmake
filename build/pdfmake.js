@@ -15170,6 +15170,7 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 var bidiFactory = __webpack_require__(84103);
+var unicode = __webpack_require__(51348);
 var TraversalTracker = __webpack_require__(73602);
 var DocPreprocessor = __webpack_require__(78702);
 var DocMeasure = __webpack_require__(77077);
@@ -16162,6 +16163,31 @@ function copyInlineStyles(inline) {
   styles.font = fontName;
   return styles;
 }
+function isRTLScript(string) {
+  var len = string.length;
+  var idx = 0;
+  var rtlScripts = {
+    Arabic: true,
+    Hebrew: true
+  };
+  while (idx < len) {
+    var code = string.charCodeAt(idx++); // Check if this is a high surrogate
+
+    if (0xd800 <= code && code <= 0xdbff && idx < len) {
+      var next = string.charCodeAt(idx); // Check if this is a low surrogate
+
+      if (0xdc00 <= next && next <= 0xdfff) {
+        idx++;
+        code = ((code & 0x3ff) << 10) + (next & 0x3ff) + 0x10000;
+      }
+    }
+    var lang = unicode.getScript(code);
+    if (lang !== "Common" && lang !== "Inherited" && lang !== "Unknown") {
+      return rtlScripts[lang];
+    }
+  }
+  return false;
+}
 LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
   var defaultDirection = textNode._dir;
   var embeddingLevels = this.bidi.getEmbeddingLevels(text, defaultDirection);
@@ -16170,15 +16196,11 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
     return ltrLine;
   }
   var flipped = text.split("");
-  var inlinesRef = new Array(flipped.length).fill(-1);
   var inlineStyles = new Array(ltrLine.inlines.length).fill(null);
-  var k = 0;
-  for (var i = 0; i < ltrLine.inlines.length; i += 1) {
+  var inlinesRef = new Array(flipped.length).fill(-1);
+  for (var i = 0, k = 0; i < ltrLine.inlines.length; i += 1) {
     var inline = ltrLine.inlines[i];
-    var inlineStyle = copyInlineStyles(inline);
-    if (inlineStyle) {
-      inlineStyles[i] = inlineStyle;
-    }
+    inlineStyles[i] = copyInlineStyles(inline);
     for (var j = 0; j < inline.text.length; j += 1) {
       inlinesRef[k] = i;
       k += 1;
@@ -16211,26 +16233,35 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
       flipped[index] = mirroredChar;
     }
   }
-  for (var _i = 0; _i < flipped.length; _i += 1) {
-    var inlineIndex = inlinesRef[_i];
-    var _inlineStyle = inlineStyles[inlineIndex];
-    if (_inlineStyle) {
-      flipped[_i] = Object.assign({
-        text: flipped[_i]
-      }, _inlineStyle);
+  var charIndex = 0;
+  var rtlTextChunks = [];
+  while (charIndex < flipped.length) {
+    var _j = charIndex;
+    while (_j < flipped.length && inlinesRef[_j] == inlinesRef[charIndex]) {
+      _j += 1;
     }
+    var inlineIndex = inlinesRef[charIndex];
+    var slicedChunk = flipped.slice(charIndex, _j);
+    var slicedText = slicedChunk.join("");
+    if (isRTLScript(slicedText)) {
+      slicedText = slicedChunk.reverse().join("");
+    }
+    rtlTextChunks.push(Object.assign({
+      text: slicedText
+    }, inlineStyles[inlineIndex]));
+    charIndex = _j;
   }
   var clonedNode = Object.assign({}, textNode, {
-    text: flipped
+    text: rtlTextChunks
   });
   var measured = this.docMeasure.measureLeaf(clonedNode);
-  var line = new Line(this.writer.context().availableWidth, ltrLine.dir);
+  var rtlLine = new Line(this.writer.context().availableWidth, ltrLine.dir);
   for (var _iterator2 = _createForOfIteratorHelperLoose(measured._inlines), _step2; !(_step2 = _iterator2()).done;) {
     var _inline = _step2.value;
-    line.addInline(_inline);
+    rtlLine.addInline(_inline);
   }
-  line.lastLineInParagraph = ltrLine.lastLineInParagraph;
-  return line;
+  rtlLine.lastLineInParagraph = ltrLine.lastLineInParagraph;
+  return rtlLine;
 };
 LayoutBuilder.prototype.buildNextLine = function (textNode) {
   var _this4 = this;
@@ -16314,7 +16345,7 @@ module.exports = LayoutBuilder;
 
 /***/ }),
 
-/***/ 12428:
+/***/ 6557:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -55438,7 +55469,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(16920).isFunction);
 var isUndefined = (__webpack_require__(16920).isUndefined);
 var isNull = (__webpack_require__(16920).isNull);
-var FileSaver = __webpack_require__(71616);
+var FileSaver = __webpack_require__(12658);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -58367,7 +58398,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(12428));
+var PdfKit = _interopDefault(__webpack_require__(6557));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -61433,7 +61464,7 @@ module.exports = TraversalTracker;
 
 /***/ }),
 
-/***/ 71616:
+/***/ 12658:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
