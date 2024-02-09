@@ -16211,9 +16211,9 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
     var start = range[0],
       end = range[1];
     while (end > start) {
-      var c = flipped[start];
+      var _c = flipped[start];
       flipped[start] = flipped[end];
-      flipped[end] = c;
+      flipped[end] = _c;
       var iRef = inlinesRef[start];
       inlinesRef[start] = inlinesRef[end];
       inlinesRef[end] = iRef;
@@ -16244,7 +16244,28 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
     var slicedChunk = flipped.slice(charIndex, _j);
     var slicedText = slicedChunk.join("");
     if (isRTLScript(slicedText)) {
-      slicedText = slicedChunk.reverse().join("");
+      var tail = 0;
+      while (tail < slicedChunk.length) {
+        var head = tail;
+        while (head < slicedChunk.length && slicedChunk[head] !== ' ') {
+          head += 1;
+        }
+        var p = tail;
+        var q = head - 1;
+        while (q > p) {
+          var c = slicedChunk[p];
+          slicedChunk[p] = slicedChunk[q];
+          slicedChunk[q] = c;
+          p += 1;
+          q -= 1;
+        }
+        tail = head;
+        while (head < slicedChunk.length && slicedChunk[head] === ' ') {
+          head += 1;
+        }
+        tail = head;
+      }
+      slicedText = slicedChunk.join("");
     }
     rtlTextChunks.push(Object.assign({
       text: slicedText
@@ -16256,8 +16277,8 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
   });
   var measured = this.docMeasure.measureLeaf(clonedNode);
   var rtlLine = new Line(this.writer.context().availableWidth, ltrLine.dir);
-  for (var _iterator2 = _createForOfIteratorHelperLoose(measured._inlines), _step2; !(_step2 = _iterator2()).done;) {
-    var _inline = _step2.value;
+  for (var _index = 0; _index < measured._inlines.length; _index++) {
+    var _inline = measured._inlines[_index];
     rtlLine.addInline(_inline);
   }
   rtlLine.lastLineInParagraph = ltrLine.lastLineInParagraph;
@@ -16345,7 +16366,7 @@ module.exports = LayoutBuilder;
 
 /***/ }),
 
-/***/ 6557:
+/***/ 39612:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -55469,7 +55490,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(16920).isFunction);
 var isUndefined = (__webpack_require__(16920).isUndefined);
 var isNull = (__webpack_require__(16920).isNull);
-var FileSaver = __webpack_require__(12658);
+var FileSaver = __webpack_require__(44173);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -58398,7 +58419,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(6557));
+var PdfKit = _interopDefault(__webpack_require__(39612));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -61464,7 +61485,7 @@ module.exports = TraversalTracker;
 
 /***/ }),
 
-/***/ 12658:
+/***/ 44173:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),

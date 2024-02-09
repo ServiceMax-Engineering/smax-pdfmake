@@ -1151,7 +1151,28 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 		const slicedChunk = flipped.slice(charIndex, j);
 		let slicedText = slicedChunk.join("");
 		if (isRTLScript(slicedText)) {
-			slicedText = slicedChunk.reverse().join("");
+			let tail = 0;
+			while (tail < slicedChunk.length) {
+				let head = tail;
+				while(head < slicedChunk.length && slicedChunk[head] !== ' ') {
+					head += 1;
+				}
+				let p = tail;
+				let q = head-1;
+				while(q > p) {
+					const c = slicedChunk[p];
+					slicedChunk[p] = slicedChunk[q];
+					slicedChunk[q] = c;
+					p += 1;
+					q -= 1;
+				}
+				tail = head;
+				while(head < slicedChunk.length && slicedChunk[head] === ' ') {
+					head += 1;
+				}
+				tail = head;
+			}
+			slicedText = slicedChunk.join("");
 		}
 		rtlTextChunks.push(
 			Object.assign({ text: slicedText }, inlineStyles[inlineIndex])
@@ -1161,7 +1182,8 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 	const clonedNode = Object.assign({}, textNode, { text: rtlTextChunks });
 	const measured = this.docMeasure.measureLeaf(clonedNode);
 	const rtlLine = new Line(this.writer.context().availableWidth, ltrLine.dir);
-	for (const inline of measured._inlines) {
+	for (let index = 0; index < measured._inlines.length; index++) {
+		const inline = measured._inlines[index];
 		rtlLine.addInline(inline);
 	}
 	rtlLine.lastLineInParagraph = ltrLine.lastLineInParagraph;
