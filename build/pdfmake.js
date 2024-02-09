@@ -12992,7 +12992,7 @@ module.exports = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 84145:
+/***/ 45608:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -51806,7 +51806,7 @@ module.exports = __webpack_require__(17187).EventEmitter;
 
 /***/ }),
 
-/***/ 5559:
+/***/ 30426:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
@@ -66970,7 +66970,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(6225).isFunction);
 var isUndefined = (__webpack_require__(6225).isUndefined);
 var isNull = (__webpack_require__(6225).isNull);
-var FileSaver = __webpack_require__(5559);
+var FileSaver = __webpack_require__(30426);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -70366,7 +70366,28 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 		const slicedChunk = flipped.slice(charIndex, j);
 		let slicedText = slicedChunk.join("");
 		if (isRTLScript(slicedText)) {
-			slicedText = slicedChunk.reverse().join("");
+			let tail = 0;
+			while (tail < slicedChunk.length) {
+				let head = tail;
+				while(head < slicedChunk.length && slicedChunk[head] !== ' ') {
+					head += 1;
+				}
+				let p = tail;
+				let q = head-1;
+				while(q > p) {
+					const c = slicedChunk[p];
+					slicedChunk[p] = slicedChunk[q];
+					slicedChunk[q] = c;
+					p += 1;
+					q -= 1;
+				}
+				tail = head;
+				while(head < slicedChunk.length && slicedChunk[head] === ' ') {
+					head += 1;
+				}
+				tail = head;
+			}
+			slicedText = slicedChunk.join("");
 		}
 		rtlTextChunks.push(
 			Object.assign({ text: slicedText }, inlineStyles[inlineIndex])
@@ -70376,7 +70397,8 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine,  text) {
 	const clonedNode = Object.assign({}, textNode, { text: rtlTextChunks });
 	const measured = this.docMeasure.measureLeaf(clonedNode);
 	const rtlLine = new Line(this.writer.context().availableWidth, ltrLine.dir);
-	for (const inline of measured._inlines) {
+	for (let index = 0; index < measured._inlines.length; index++) {
+		const inline = measured._inlines[index];
 		rtlLine.addInline(inline);
 	}
 	rtlLine.lastLineInParagraph = ltrLine.lastLineInParagraph;
@@ -70794,7 +70816,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(84145));
+var PdfKit = _interopDefault(__webpack_require__(45608));
 
 function getEngineInstance() {
 	return PdfKit;
