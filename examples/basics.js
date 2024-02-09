@@ -1,15 +1,47 @@
-var fonts = {
+const fs = require("fs");
+
+let fontsPath = "fonts";
+if (process.argv.length > 2) {
+	fontsPath = process.argv[2];
+}
+
+const fonts = {
+	OpenSans: {
+		normal: `${fontsPath}/OpenSans.ttf`,
+		bold: `${fontsPath}/OpenSans-Bold.ttf`,
+		italics: `${fontsPath}/OpenSans-Italic.ttf`,
+		bolditalics: `${fontsPath}/OpenSans-BoldItalic.ttf`,
+	},
 	Roboto: {
-		normal: 'fonts/Roboto-Regular.ttf',
-		bold: 'fonts/Roboto-Medium.ttf',
-		italics: 'fonts/Roboto-Italic.ttf',
-		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
-	}
+		normal: `${fontsPath}/Roboto-Regular.ttf`,
+		bold: `${fontsPath}/Roboto-Medium.ttf`,
+		italics: `${fontsPath}/Roboto-Italic.ttf`,
+		bolditalics: `${fontsPath}/Roboto-MediumItalic.ttf`,
+	},
+	NotoSansHebrew: {
+		normal: `${fontsPath}/NotoSansHebrew-Regular.ttf`,
+		bold: `${fontsPath}/NotoSansHebrew-Bold.ttf`,
+	},
+	NotoSansArabic: {
+		normal: `${fontsPath}/NotoSansArabic-Regular.ttf`,
+		bold: `${fontsPath}/NotoSansArabic-Medium.ttf`,
+	},
+	Rubik: {
+		normal: `${fontsPath}/Rubik-Regular.ttf`,
+		bold: `${fontsPath}/Rubik-Bold.ttf`,
+		italics: `${fontsPath}/Rubik-Italic.ttf`,
+		bolditalics: `${fontsPath}/Rubik-BoldItalic.ttf`,
+	},
+	IBMPlexSansArabic: {
+		normal: `${fontsPath}/IBMPlexSansArabic-Regular.ttf`,
+		bold: `${fontsPath}/IBMPlexSansArabic-Bold.ttf`,
+		italics: `${fontsPath}/IBMPlexSansArabic-Regular.ttf`,
+		bolditalics: `${fontsPath}/IBMPlexSansArabic-Bold.ttf`,
+	},
 };
 
-var PdfPrinter = require('../src/printer');
-var printer = new PdfPrinter(fonts);
-var fs = require('fs');
+const PdfPrinter = require("../src/printer");
+const printer = new PdfPrinter(fonts);
 
 var docDefinition = {
 	content: [
@@ -18,6 +50,6 @@ var docDefinition = {
 	]
 };
 
-var pdfDoc = printer.createPdfKitDocument(docDefinition);
-pdfDoc.pipe(fs.createWriteStream('pdfs/basics.pdf'));
+const pdfDoc = printer.createPdfKitDocument(docDefinition);
+pdfDoc.pipe(fs.createWriteStream(`${fontsPath}/../pdfs/basics.pdf`));
 pdfDoc.end();
