@@ -15544,6 +15544,8 @@ LayoutBuilder.prototype.processNode = function (node) {
       self.processTable(node);
     } else if (node.text !== undefined) {
       self.processLeaf(node);
+    } else if (node.customText !== undefined) {
+      self.processCustomText(node);
     } else if (node.toc) {
       self.processToc(node);
     } else if (node.image) {
@@ -16140,6 +16142,82 @@ LayoutBuilder.prototype.processLeaf = function (node) {
     }
   }
 };
+LayoutBuilder.prototype.processCustomText = function (node) {
+  var _this4 = this;
+  var buildlines = function buildlines(textNode) {
+    var lines = [];
+    var nextLine = _this4.buildNextLine(textNode);
+    var currentHeight = nextLine ? nextLine.getHeight() : 0;
+    var maxHeight = textNode.maxHeight || -1;
+    var height = textNode.height || -1;
+    var fit = !!textNode.fitContent && typeof textNode.fontSize === "number" && (height > 0 || maxHeight > 0);
+    if (fit) {
+      maxHeight = Math.max(maxHeight, height);
+    }
+    var usedHeight = 0;
+    while (nextLine && (maxHeight === -1 || currentHeight < maxHeight)) {
+      lines.push(nextLine);
+      usedHeight += nextLine.getHeight();
+      nextLine = _this4.buildNextLine(textNode);
+      if (nextLine) {
+        currentHeight += nextLine.getHeight();
+      }
+    }
+    return {
+      lines: lines,
+      usedHeight: usedHeight,
+      totalHeight: currentHeight,
+      fit: fit
+    };
+  };
+  var _buildlines = buildlines(node),
+    lines = _buildlines.lines,
+    usedHeight = _buildlines.usedHeight,
+    totalHeight = _buildlines.totalHeight,
+    fit = _buildlines.fit;
+  if (fit) {
+    var fontSize = node.fontSize;
+    // TODO(jiwan): a binary search maybe faster here ?
+    while (totalHeight > usedHeight) {
+      fontSize = fontSize - 1;
+      var measured = this.docMeasure.measureLeaf(Object.assign(node, {
+        text: node.customText,
+        fontSize: fontSize
+      }));
+      delete measured.text;
+      var _buildlines2 = buildlines(measured);
+      lines = _buildlines2.lines;
+      usedHeight = _buildlines2.usedHeight;
+      totalHeight = _buildlines2.totalHeight;
+      fit = _buildlines2.fit;
+    }
+  }
+  var excessSpace = (node.height || 0) - usedHeight;
+  var excessHalfSpace = Math.max(excessSpace / 2, 0) / 100 * 100;
+  var paddingBefore = 0;
+  var paddingAfter = 0;
+  var alignmentVertical = node.alignmentVertical || "top";
+  if (alignmentVertical === "top") {
+    paddingAfter = excessHalfSpace * 2;
+    paddingBefore = 0;
+  } else if (alignmentVertical === "bottom") {
+    paddingAfter = 0;
+    paddingBefore = excessHalfSpace * 2;
+  } else if (alignmentVertical === "center") {
+    paddingBefore = excessHalfSpace;
+    paddingAfter = excessHalfSpace;
+  }
+  if (paddingBefore > 0) {
+    this.writer.context().moveDown(paddingBefore);
+  }
+  for (var index = 0; index < lines.length; index++) {
+    var line = lines[index];
+    node.positions.push(this.writer.addLine(line));
+  }
+  if (paddingAfter > 0) {
+    this.writer.context().moveDown(paddingAfter);
+  }
+};
 LayoutBuilder.prototype.processToc = function (node) {
   if (node.toc.title) {
     this.processNode(node.toc.title);
@@ -16285,7 +16363,7 @@ LayoutBuilder.prototype.handleRtl = function (textNode, ltrLine, text) {
   return rtlLine;
 };
 LayoutBuilder.prototype.buildNextLine = function (textNode) {
-  var _this4 = this;
+  var _this5 = this;
   function cloneInline(inline) {
     var newInline = inline.constructor();
     for (var key in inline) {
@@ -16297,7 +16375,7 @@ LayoutBuilder.prototype.buildNextLine = function (textNode) {
     return null;
   }
   var makeLine = function makeLine(node) {
-    var line = new Line(_this4.writer.context().availableWidth, node._dir);
+    var line = new Line(_this5.writer.context().availableWidth, node._dir);
     var textTools = new TextTools(null);
     var isForceContinue = false;
     while (node._inlines && node._inlines.length > 0 && (line.hasEnoughSpaceForInline(node._inlines[0], node._inlines.slice(1)) || isForceContinue)) {
@@ -16366,7 +16444,7 @@ module.exports = LayoutBuilder;
 
 /***/ }),
 
-/***/ 90100:
+/***/ 33132:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -55613,7 +55691,7 @@ module.exports = URLReactNativeResolver;
 var isFunction = (__webpack_require__(16920).isFunction);
 var isUndefined = (__webpack_require__(16920).isUndefined);
 var isNull = (__webpack_require__(16920).isNull);
-var FileSaver = __webpack_require__(66736);
+var FileSaver = __webpack_require__(9954);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -56246,6 +56324,8 @@ DocMeasure.prototype.measureNode = function (node) {
 			return extendMargins(self.measureTable(node));
 		} else if (node.text !== undefined) {
 			return extendMargins(self.measureLeaf(node));
+		} else if (node.customText !== undefined) {
+			return extendMargins(self.measureCustomText(node));
 		} else if (node.toc) {
 			return extendMargins(self.measureToc(node));
 		} else if (node.image) {
@@ -56432,6 +56512,12 @@ DocMeasure.prototype.measureLeaf = function (node) {
 	node._dir = node.dir;
 
 	return node;
+};
+
+DocMeasure.prototype.measureCustomText = function(node) {
+	const meausuredNode = this.measureLeaf(Object.assign(node, { text: node.customText }));
+	delete meausuredNode.text;
+	return meausuredNode;
 };
 
 DocMeasure.prototype.measureToc = function (node) {
@@ -57056,6 +57142,11 @@ DocPreprocessor.prototype.preprocessNode = function (node) {
 		return this.preprocessTable(node);
 	} else if (node.text !== undefined) {
 		return this.preprocessText(node);
+	} else if (node.customText !== undefined) {
+		const watermarkNode = this.preprocessText(Object.assign(node, {text: node.customText || ""}));
+		watermarkNode.customText = watermarkNode.text;
+		delete watermarkNode.text;
+		return watermarkNode;
 	} else if (node.toc) {
 		return this.preprocessToc(node);
 	} else if (node.image) {
@@ -58554,7 +58645,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(90100));
+var PdfKit = _interopDefault(__webpack_require__(33132));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -61620,7 +61711,7 @@ module.exports = TraversalTracker;
 
 /***/ }),
 
-/***/ 66736:
+/***/ 9954:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),

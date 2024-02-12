@@ -57,6 +57,8 @@ DocMeasure.prototype.measureNode = function (node) {
 			return extendMargins(self.measureTable(node));
 		} else if (node.text !== undefined) {
 			return extendMargins(self.measureLeaf(node));
+		} else if (node.customText !== undefined) {
+			return extendMargins(self.measureCustomText(node));
 		} else if (node.toc) {
 			return extendMargins(self.measureToc(node));
 		} else if (node.image) {
@@ -243,6 +245,12 @@ DocMeasure.prototype.measureLeaf = function (node) {
 	node._dir = node.dir;
 
 	return node;
+};
+
+DocMeasure.prototype.measureCustomText = function(node) {
+	const meausuredNode = this.measureLeaf(Object.assign(node, { text: node.customText }));
+	delete meausuredNode.text;
+	return meausuredNode;
 };
 
 DocMeasure.prototype.measureToc = function (node) {
