@@ -408,6 +408,8 @@ LayoutBuilder.prototype.processNode = function (node) {
 			self.processTable(node);
 		} else if (node.text !== undefined) {
 			self.processLeaf(node);
+		} else if (node.customText !== undefined) {
+			self.processCustomText(node);
 		} else if (node.toc) {
 			self.processToc(node);
 		} else if (node.image) {
@@ -717,6 +719,69 @@ LayoutBuilder.prototype.processLeaf = function (node) {
 		if (line) {
 			currentHeight += line.getHeight();
 		}
+	}
+};
+
+LayoutBuilder.prototype.processCustomText = function(node) {
+	const buildlines = (textNode) => {
+		let lines = [];
+		let nextLine = this.buildNextLine(textNode);
+		let currentHeight = nextLine ? nextLine.getHeight() : 0;
+		let maxHeight = textNode.maxHeight || -1;
+		const height = textNode.height || -1;
+		const fit = !!textNode.fitContent && typeof textNode.fontSize === "number" && (height > 0 || maxHeight > 0);
+		if (fit) {
+			maxHeight = Math.max(maxHeight, height);
+		}
+		let usedHeight = 0;
+		while (nextLine && (maxHeight === -1 || currentHeight < maxHeight)) {
+			lines.push(nextLine);
+			usedHeight += nextLine.getHeight();
+			nextLine = this.buildNextLine(textNode);
+			if (nextLine) {
+				currentHeight += nextLine.getHeight();
+			}
+		}
+		return { lines, usedHeight, totalHeight: currentHeight, fit };
+	};
+	let { lines, usedHeight, totalHeight, fit } = buildlines(node);
+	if (fit) {
+		let fontSize = node.fontSize;
+		// TODO(jiwan): a binary search maybe faster here ?
+		while (totalHeight > usedHeight) {
+			fontSize = fontSize - 1;
+			const measured = this.docMeasure.measureLeaf(
+				Object.assign(node, { text: node.customText, fontSize })
+			);
+			delete measured.text;
+			({ lines, usedHeight, totalHeight, fit } = buildlines(measured));
+		}
+	}
+	let excessSpace = (node.height || 0) - usedHeight;
+	let excessHalfSpace = (Math.max(excessSpace / 2, 0) / 100) * 100;
+	let paddingBefore = 0;
+	let paddingAfter = 0;
+	const alignmentVertical = node.alignmentVertical || "top";
+	if (alignmentVertical === "top") {
+		paddingAfter = excessHalfSpace * 2;
+		paddingBefore = 0;
+	} else if (alignmentVertical === "bottom") {
+		paddingAfter = 0;
+		paddingBefore = excessHalfSpace * 2;
+	} else if (alignmentVertical === "center") {
+		paddingBefore = excessHalfSpace;
+		paddingAfter = excessHalfSpace;
+	}
+
+	if (paddingBefore > 0) {
+		this.writer.context().moveDown(paddingBefore);
+	}
+	for (let index = 0; index < lines.length; index++) {
+		const line = lines[index];
+		node.positions.push(this.writer.addLine(line));
+	}
+	if (paddingAfter > 0) {
+		this.writer.context().moveDown(paddingAfter);
 	}
 };
 

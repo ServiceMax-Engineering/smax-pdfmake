@@ -46,6 +46,11 @@ DocPreprocessor.prototype.preprocessNode = function (node) {
 		return this.preprocessTable(node);
 	} else if (node.text !== undefined) {
 		return this.preprocessText(node);
+	} else if (node.customText !== undefined) {
+		const watermarkNode = this.preprocessText(Object.assign(node, {text: node.customText || ""}));
+		watermarkNode.customText = watermarkNode.text;
+		delete watermarkNode.text;
+		return watermarkNode;
 	} else if (node.toc) {
 		return this.preprocessToc(node);
 	} else if (node.image) {

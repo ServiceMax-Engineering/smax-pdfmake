@@ -12992,7 +12992,7 @@ module.exports = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 45608:
+/***/ 37046:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -51806,7 +51806,7 @@ module.exports = __webpack_require__(17187).EventEmitter;
 
 /***/ }),
 
-/***/ 30426:
+/***/ 69121:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
@@ -66970,7 +66970,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(6225).isFunction);
 var isUndefined = (__webpack_require__(6225).isUndefined);
 var isNull = (__webpack_require__(6225).isNull);
-var FileSaver = __webpack_require__(30426);
+var FileSaver = __webpack_require__(69121);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -67570,6 +67570,8 @@ DocMeasure.prototype.measureNode = function (node) {
 			return extendMargins(self.measureTable(node));
 		} else if (node.text !== undefined) {
 			return extendMargins(self.measureLeaf(node));
+		} else if (node.customText !== undefined) {
+			return extendMargins(self.measureCustomText(node));
 		} else if (node.toc) {
 			return extendMargins(self.measureToc(node));
 		} else if (node.image) {
@@ -67753,6 +67755,12 @@ DocMeasure.prototype.measureLeaf = function (node) {
 	node._dir = node.dir;
 
 	return node;
+};
+
+DocMeasure.prototype.measureCustomText = function(node) {
+	const meausuredNode = this.measureLeaf(Object.assign(node, { text: node.customText }));
+	delete meausuredNode.text;
+	return meausuredNode;
 };
 
 DocMeasure.prototype.measureToc = function (node) {
@@ -68377,6 +68385,11 @@ DocPreprocessor.prototype.preprocessNode = function (node) {
 		return this.preprocessTable(node);
 	} else if (node.text !== undefined) {
 		return this.preprocessText(node);
+	} else if (node.customText !== undefined) {
+		const watermarkNode = this.preprocessText(Object.assign(node, {text: node.customText || ""}));
+		watermarkNode.customText = watermarkNode.text;
+		delete watermarkNode.text;
+		return watermarkNode;
 	} else if (node.toc) {
 		return this.preprocessToc(node);
 	} else if (node.image) {
@@ -69941,6 +69954,8 @@ LayoutBuilder.prototype.processNode = function (node) {
 			self.processTable(node);
 		} else if (node.text !== undefined) {
 			self.processLeaf(node);
+		} else if (node.customText !== undefined) {
+			self.processCustomText(node);
 		} else if (node.toc) {
 			self.processToc(node);
 		} else if (node.image) {
@@ -70250,6 +70265,69 @@ LayoutBuilder.prototype.processLeaf = function (node) {
 		if (line) {
 			currentHeight += line.getHeight();
 		}
+	}
+};
+
+LayoutBuilder.prototype.processCustomText = function(node) {
+	const buildlines = (textNode) => {
+		let lines = [];
+		let nextLine = this.buildNextLine(textNode);
+		let currentHeight = nextLine ? nextLine.getHeight() : 0;
+		let maxHeight = textNode.maxHeight || -1;
+		const height = textNode.height || -1;
+		const fit = !!textNode.fitContent && typeof textNode.fontSize === "number" && (height > 0 || maxHeight > 0);
+		if (fit) {
+			maxHeight = Math.max(maxHeight, height);
+		}
+		let usedHeight = 0;
+		while (nextLine && (maxHeight === -1 || currentHeight < maxHeight)) {
+			lines.push(nextLine);
+			usedHeight += nextLine.getHeight();
+			nextLine = this.buildNextLine(textNode);
+			if (nextLine) {
+				currentHeight += nextLine.getHeight();
+			}
+		}
+		return { lines, usedHeight, totalHeight: currentHeight, fit };
+	};
+	let { lines, usedHeight, totalHeight, fit } = buildlines(node);
+	if (fit) {
+		let fontSize = node.fontSize;
+		// TODO(jiwan): a binary search maybe faster here ?
+		while (totalHeight > usedHeight) {
+			fontSize = fontSize - 1;
+			const measured = this.docMeasure.measureLeaf(
+				Object.assign(node, { text: node.customText, fontSize })
+			);
+			delete measured.text;
+			({ lines, usedHeight, totalHeight, fit } = buildlines(measured));
+		}
+	}
+	let excessSpace = (node.height || 0) - usedHeight;
+	let excessHalfSpace = (Math.max(excessSpace / 2, 0) / 100) * 100;
+	let paddingBefore = 0;
+	let paddingAfter = 0;
+	const alignmentVertical = node.alignmentVertical || "top";
+	if (alignmentVertical === "top") {
+		paddingAfter = excessHalfSpace * 2;
+		paddingBefore = 0;
+	} else if (alignmentVertical === "bottom") {
+		paddingAfter = 0;
+		paddingBefore = excessHalfSpace * 2;
+	} else if (alignmentVertical === "center") {
+		paddingBefore = excessHalfSpace;
+		paddingAfter = excessHalfSpace;
+	}
+
+	if (paddingBefore > 0) {
+		this.writer.context().moveDown(paddingBefore);
+	}
+	for (let index = 0; index < lines.length; index++) {
+		const line = lines[index];
+		node.positions.push(this.writer.addLine(line));
+	}
+	if (paddingAfter > 0) {
+		this.writer.context().moveDown(paddingAfter);
 	}
 };
 
@@ -70816,7 +70894,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(45608));
+var PdfKit = _interopDefault(__webpack_require__(37046));
 
 function getEngineInstance() {
 	return PdfKit;
