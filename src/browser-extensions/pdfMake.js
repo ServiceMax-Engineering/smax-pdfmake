@@ -35,6 +35,19 @@ function canCreatePdf() {
 	}
 }
 
+function getURLResolver() {
+	const navigator = (global || {}).navigator || {};
+	const isRN = ((navigator.product || "").toLowerCase() === "reactnative");
+	let URLResolver;
+	if (isRN) {
+		URLResolver = require('./URLReactNativeResolver');
+	}  else {
+		URLResolver = require('./URLBrowserResolver');
+	}
+	return new URLResolver(require('fs'));
+}
+
+
 Document.prototype._createDoc = function (options, cb) {
 	var getExtendedUrl = function (url) {
 		if (typeof url === 'object') {
@@ -60,8 +73,7 @@ Document.prototype._createDoc = function (options, cb) {
 		return doc;
 	}
 
-	var URLBrowserResolver = require('./URLBrowserResolver');
-	var urlResolver = new URLBrowserResolver(require('fs'));
+	const urlResolver = getURLResolver();
 
 	for (var font in this.fonts) {
 		if (this.fonts.hasOwnProperty(font)) {

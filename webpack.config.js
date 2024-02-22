@@ -33,6 +33,9 @@ module.exports = {
 			assert: require.resolve('assert/')
 		}
 	},
+	externals: {
+		"rnfs": "rnfs",
+	},
 	module: {
 		rules: [
 			// for fs don't use babel _interopDefault command
