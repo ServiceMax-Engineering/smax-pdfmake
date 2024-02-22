@@ -1,14 +1,14 @@
 /*! pdfmake v0.2.14, @license MIT, @link http://pdfmake.org */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
+		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("rnfs"); } catch(e) {} }()));
 	else if(typeof define === 'function' && define.amd)
-		define([], factory);
+		define(["rnfs"], factory);
 	else {
-		var a = factory();
+		var a = typeof exports === 'object' ? factory((function webpackLoadOptionalExternalModule() { try { return require("rnfs"); } catch(e) {} }())) : factory(root["rnfs"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function() {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE__33688__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -16366,7 +16366,7 @@ module.exports = LayoutBuilder;
 
 /***/ }),
 
-/***/ 39612:
+/***/ 90100:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -55480,6 +55480,129 @@ module.exports = URLBrowserResolver;
 
 /***/ }),
 
+/***/ 49093:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/* provided dependency */ var Buffer = __webpack_require__(43060)["Buffer"];
+
+function URLReactNativeResolver(fs) {
+	this.fs = fs;
+	this.resolving = {};
+	this.rnfs = null;
+	try {
+		this.rnfs = __webpack_require__(33688);
+	} catch (error) {
+		console.log("failed to resolve rnfs");
+	}
+}
+
+function fetchUrl(url, headers) {
+	return new Promise(function (resolve, reject) {
+		const xhr = new XMLHttpRequest();
+		xhr.open("GET", url, true);
+		for (const headerName in headers) {
+			xhr.setRequestHeader(headerName, headers[headerName]);
+		}
+		xhr.responseType = "arraybuffer";
+
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState !== 4) {
+				return;
+			}
+
+			const ok = xhr.status >= 200 && xhr.status < 300;
+			if (!ok) {
+				setTimeout(function () {
+					reject(new TypeError('Failed to fetch (url: "' + url + '")'));
+				}, 0);
+			}
+		};
+
+		xhr.onload = function () {
+			const ok = xhr.status >= 200 && xhr.status < 300;
+			if (ok) {
+				resolve(xhr.response);
+			}
+		};
+
+		xhr.onerror = function () {
+			setTimeout(function () {
+				reject(new TypeError('Network request failed (url: "' + url + '")'));
+			}, 0);
+		};
+
+		xhr.ontimeout = function () {
+			setTimeout(function () {
+				reject(new TypeError('Network request failed (url: "' + url + '")'));
+			}, 0);
+		};
+
+		xhr.send();
+	});
+}
+
+URLReactNativeResolver.prototype.resolve = function (url, headers) {
+	if (!this.resolving[url]) {
+		const scheme = url.substring(0, 6).toLowerCase();
+		const isHttp = scheme.indexOf("https:") === 0 || scheme.indexOf("http:") === 0;
+		const isBase64 = scheme.indexOf("data:") === 0;
+		const _this = this;
+		this.resolving[url] = new Promise(function (resolve, reject) {
+			if (isBase64) {
+				resolve();
+			} else if (isHttp) {
+				if (_this.fs.existsSync(url)) {
+					// url was downloaded earlier
+					resolve();
+				} else {
+					fetchUrl(url, headers).then(
+						function (buffer) {
+							_this.fs.writeFileSync(url, buffer);
+							resolve();
+						},
+						function (result) {
+							reject(result);
+						}
+					);
+				}
+			} else if (_this.rnfs) {
+				if (_this.fs.existsSync(url)) {
+					resolve();
+				} else {
+					_this.rnfs
+						.readFile(url, "base64")
+						.then((base64Str) => {
+							_this.fs.writeFileSync(url, Buffer.from(base64Str, "base64"));
+							resolve();
+						})
+						.catch(reject);
+				}
+			} else {
+				// cannot be resolved
+				resolve();
+			}
+		});
+	}
+
+	return this.resolving[url];
+};
+
+URLReactNativeResolver.prototype.resolved = function () {
+	const _this = this;
+	return new Promise(function (resolve, reject) {
+		Promise.all(Object.values(_this.resolving)).then(function () {
+			resolve();
+		}, function (result) {
+			reject(result);
+		});
+	});
+};
+
+module.exports = URLReactNativeResolver;
+
+
+/***/ }),
+
 /***/ 82669:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
@@ -55490,7 +55613,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(16920).isFunction);
 var isUndefined = (__webpack_require__(16920).isUndefined);
 var isNull = (__webpack_require__(16920).isNull);
-var FileSaver = __webpack_require__(44173);
+var FileSaver = __webpack_require__(66736);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -55522,6 +55645,19 @@ function canCreatePdf() {
 	}
 }
 
+function getURLResolver() {
+	const navigator = (__webpack_require__.g || {}).navigator || {};
+	const isRN = ((navigator.product || "").toLowerCase() === "reactnative");
+	let URLResolver;
+	if (isRN) {
+		URLResolver = __webpack_require__(49093);
+	}  else {
+		URLResolver = __webpack_require__(30570);
+	}
+	return new URLResolver(__webpack_require__(52773));
+}
+
+
 Document.prototype._createDoc = function (options, cb) {
 	var getExtendedUrl = function (url) {
 		if (typeof url === 'object') {
@@ -55547,8 +55683,7 @@ Document.prototype._createDoc = function (options, cb) {
 		return doc;
 	}
 
-	var URLBrowserResolver = __webpack_require__(30570);
-	var urlResolver = new URLBrowserResolver(__webpack_require__(52773));
+	const urlResolver = getURLResolver();
 
 	for (var font in this.fonts) {
 		if (this.fonts.hasOwnProperty(font)) {
@@ -58419,7 +58554,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(39612));
+var PdfKit = _interopDefault(__webpack_require__(90100));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -61485,7 +61620,7 @@ module.exports = TraversalTracker;
 
 /***/ }),
 
-/***/ 44173:
+/***/ 66736:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
@@ -74166,6 +74301,16 @@ var LineBreaker = /*#__PURE__*/function () {
   return LineBreaker;
 }();
 module.exports = LineBreaker;
+
+/***/ }),
+
+/***/ 33688:
+/***/ (function(module) {
+
+"use strict";
+if(typeof __WEBPACK_EXTERNAL_MODULE__33688__ === 'undefined') { var e = new Error("Cannot find module 'rnfs'"); e.code = 'MODULE_NOT_FOUND'; throw e; }
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__33688__;
 
 /***/ }),
 
