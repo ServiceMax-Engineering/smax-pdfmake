@@ -121,6 +121,39 @@ Document.prototype._createDoc = function (options, cb) {
 			}
 		}
 	}
+	const resolvedAttachements = {};
+	if (this.docDefinition.attachments) {
+		for (const attachmentKey in this.docDefinition.attachments) {
+			const attachmentValue = this.docDefinition.attachments[attachmentKey];
+			if (attachmentValue) {
+				let src;
+				let name;
+				let extraProperties = {};
+				if (typeof attachmentValue === "object") {
+					src = getExtendedUrl(attachmentValue.src);
+					name = attachmentValue.name;
+					extraProperties = attachmentValue;
+					delete extraProperties.src;
+					delete extraProperties.name;
+				} else {
+					src = getExtendedUrl(attachmentValue);
+				}
+				const resolvedAttachment = {
+					name: name ? name : attachmentKey,
+					extra: extraProperties,
+				};
+				const scheme = src.url.substring(0, 6);
+				if (scheme.startsWith("data:")) {
+					resolvedAttachment.src = src.url;
+				} else {
+					resolvedAttachment.url = src.url;
+					urlResolver.resolve(src.url, src.headers);
+				}
+				resolvedAttachements[attachmentKey] = resolvedAttachment;
+			}
+		}
+	}
+	this.docDefinition.attachments = resolvedAttachements;
 
 	var _this = this;
 

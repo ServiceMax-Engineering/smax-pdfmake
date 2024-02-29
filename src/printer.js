@@ -166,6 +166,7 @@ PdfPrinter.prototype.createPdfKitDocument = function (docDefinition, options) {
 	var patterns = createPatterns(docDefinition.patterns || {}, this.pdfKitDoc);
 
 	renderPages(pages, this.fontProvider, this.pdfKitDoc, patterns, options.progressCallback);
+	embedAttachments(this.pdfKitDoc, docDefinition);
 
 	if (options.autoPrint) {
 		var printActionRef = this.pdfKitDoc.ref({
@@ -689,6 +690,18 @@ function renderSVG(svg, x, y, pdfKitDoc, fontProvider) {
 	};
 
 	SVGtoPDF(pdfKitDoc, svg.svg, svg.x, svg.y, options);
+}
+
+function embedAttachments(pdfKitDoc, docDefinition) {
+	const fs = require("fs");
+	const attachments = docDefinition.attachments;
+	for (const attachmentKey in attachments) {
+		const attachmentValue = attachments[attachmentKey];
+		const attachmentName = attachmentValue.name;
+		const extra = attachmentValue.extra;
+		const src = attachmentValue.src !== undefined ? attachmentValue.src : fs.readFileSync(attachmentValue.url);
+		pdfKitDoc.file(src, Object.assign({ name: attachmentName }, extra));
+	}
 }
 
 function beginClip(rect, pdfKitDoc) {
