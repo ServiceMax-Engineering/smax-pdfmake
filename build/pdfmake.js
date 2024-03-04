@@ -12992,7 +12992,7 @@ module.exports = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 84393:
+/***/ 8941:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -51806,7 +51806,7 @@ module.exports = __webpack_require__(17187).EventEmitter;
 
 /***/ }),
 
-/***/ 55390:
+/***/ 94408:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
@@ -66970,7 +66970,7 @@ module.exports = URLBrowserResolver;
 var isFunction = (__webpack_require__(6225).isFunction);
 var isUndefined = (__webpack_require__(6225).isUndefined);
 var isNull = (__webpack_require__(6225).isNull);
-var FileSaver = __webpack_require__(55390);
+var FileSaver = __webpack_require__(94408);
 var saveAs = FileSaver.saveAs;
 
 var defaultClientFonts = {
@@ -67088,6 +67088,39 @@ Document.prototype._createDoc = function (options, cb) {
 			}
 		}
 	}
+	const resolvedAttachements = {};
+	if (this.docDefinition.attachments) {
+		for (const attachmentKey in this.docDefinition.attachments) {
+			const attachmentValue = this.docDefinition.attachments[attachmentKey];
+			if (attachmentValue) {
+				let src;
+				let name;
+				let extraProperties = {};
+				if (typeof attachmentValue === "object") {
+					src = getExtendedUrl(attachmentValue.src);
+					name = attachmentValue.name;
+					extraProperties = attachmentValue;
+					delete extraProperties.src;
+					delete extraProperties.name;
+				} else {
+					src = getExtendedUrl(attachmentValue);
+				}
+				const resolvedAttachment = {
+					name: name ? name : attachmentKey,
+					extra: extraProperties,
+				};
+				const scheme = src.url.substring(0, 6);
+				if (scheme.startsWith("data:")) {
+					resolvedAttachment.src = src.url;
+				} else {
+					resolvedAttachment.url = src.url;
+					urlResolver.resolve(src.url, src.headers);
+				}
+				resolvedAttachements[attachmentKey] = resolvedAttachment;
+			}
+		}
+	}
+	this.docDefinition.attachments = resolvedAttachements;
 
 	var _this = this;
 
@@ -70894,7 +70927,7 @@ function _interopDefault(ex) {
 	return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex;
 }
 
-var PdfKit = _interopDefault(__webpack_require__(84393));
+var PdfKit = _interopDefault(__webpack_require__(8941));
 
 function getEngineInstance() {
 	return PdfKit;
@@ -71085,6 +71118,7 @@ PdfPrinter.prototype.createPdfKitDocument = function (docDefinition, options) {
 	var patterns = createPatterns(docDefinition.patterns || {}, this.pdfKitDoc);
 
 	renderPages(pages, this.fontProvider, this.pdfKitDoc, patterns, options.progressCallback);
+	embedAttachments(this.pdfKitDoc, docDefinition);
 
 	if (options.autoPrint) {
 		var printActionRef = this.pdfKitDoc.ref({
@@ -71608,6 +71642,18 @@ function renderSVG(svg, x, y, pdfKitDoc, fontProvider) {
 	};
 
 	SVGtoPDF(pdfKitDoc, svg.svg, svg.x, svg.y, options);
+}
+
+function embedAttachments(pdfKitDoc, docDefinition) {
+	const fs = __webpack_require__(73857);
+	const attachments = docDefinition.attachments;
+	for (const attachmentKey in attachments) {
+		const attachmentValue = attachments[attachmentKey];
+		const attachmentName = attachmentValue.name;
+		const extra = attachmentValue.extra;
+		const src = attachmentValue.src !== undefined ? attachmentValue.src : fs.readFileSync(attachmentValue.url);
+		pdfKitDoc.file(src, Object.assign({ name: attachmentName }, extra));
+	}
 }
 
 function beginClip(rect, pdfKitDoc) {
